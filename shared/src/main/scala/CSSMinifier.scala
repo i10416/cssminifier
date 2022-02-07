@@ -38,11 +38,7 @@ object CSSMinifier {
 
   }
 
-  /** Authors using an @charset rule must place the rule at the very beginning
-    * of the style sheet, __preceded by no characters__. @charset must be
-    * lowercase, no backslash escapes, followed by the encoding name, followed
-    * by ";".
-    */
+  
   @tailrec
   def handleCharsets(
       str: List[Char],
@@ -156,21 +152,23 @@ object CSSMinifier {
       matcher: (Option[Char], Char) => Boolean,
       cursor: Int = 0,
       consumed: List[Char] = Nil,
-      prev: Option[Char] = None
+      prev: Option[Char] = None,
+      shouldReverseBack: Boolean = true
   ): (Int, List[Char], List[Char]) = {
     str match {
       case head :: tail if matcher(prev, head) =>
         val (prev :: other) = consumed
-        (cursor, other.reverse, prev :: head :: tail)
+        (cursor, if(shouldReverseBack) other.reverse else other, prev :: head :: tail)
       case head :: tail =>
         splitWhereBefore(
           tail,
           matcher,
           cursor + 1,
           head :: consumed,
-          Some(head)
+          Some(head),
+          shouldReverseBack
         )
-      case Nil => (cursor, consumed.reverse, Nil)
+      case Nil => (cursor, if(shouldReverseBack) consumed.reverse else consumed, Nil)
     }
   }
 
@@ -245,17 +243,18 @@ object CSSMinifier {
     * todo: preserving string literal while traversing
     */
   @tailrec
-  def compressComments(
+  def handleCommentsAndStrings(
       s: List[Char],
       done: StringBuilder = new StringBuilder,
       preservedComments: List[String] = Nil,
-      preservedStrings: List[String] = Nil
-  ): (String, List[String]) = {
-    splitWhereBefore(s, CharMatcher.openCommentOrString) match {
+      preservedStrings: List[String] = Nil,
+      charset: Option[String]=None
+  ): (String, List[String],List[String],Option[String]) = {
+    splitWhereBefore(s, CharMatcher.openCommentOrString,shouldReverseBack = false) match {
       // consumed all chars and there remains no comment start nor string literal start.
       case (_, withoutComments, Nil) =>
-        done.appendAll(withoutComments)
-        (done.toString(), preservedComments.reverse)
+        done.appendAll(withoutComments.reverse)
+        (done.toString().trim, preservedComments.reverse,preservedStrings.reverse,charset)
       //avoid mistakenly remove comment-like value from string
       case (
             _,
@@ -263,23 +262,40 @@ object CSSMinifier {
             // we are sure char before quote char here won't escape quote
             prevQuote :: (q @ ('\"' | '\'')) :: startStringLiteral
           ) =>
-        done.appendAll(consumed)
-        done.append(prevQuote)
-        val (_, stringPart, remains) =
-          splitWhereAfter(startStringLiteral, CharMatcher.closeString(q))
-        done.append(q)
-        done.appendAll(placeholder("STRING", preservedStrings.length))
-        done.append(q)
-        // `/*` inside string literal should not be regarded as start signal of comment part.
-        // thus, must not be removed from processed output.
-        compressComments(
-          remains,
-          done,
-          preservedComments,
-          stringPart.dropRight(1).mkString :: preservedStrings
-        )
+          val (_, stringPart, remains) =
+            splitWhereAfter(startStringLiteral, CharMatcher.closeString(q))
+          /** Authors using an @charset rule must place the rule at the very beginning
+            * of the style sheet, __preceded by no characters__. @charset must be
+            * lowercase, no backslash escapes, followed by the encoding name, followed
+            * by ";".
+            */
+            // handle charset here as charset contains string literal
+          if(prevQuote.isWhitespace && q == '\"' && consumed.startsWith("tesrahc@") && remains.startsWith(";")){
+          done.appendAll(consumed.drop(8).reverse) // drop `@charset` from consumed string
+            handleCommentsAndStrings(
+               remains.drop(1), // remove semicolon
+               done,
+             preservedComments,
+               preservedStrings,
+               if(charset.isEmpty) Some( s"@charset \"${stringPart.mkString};" ) else charset
+            )
+          } else {
+          done.appendAll(consumed.reverse)
+          done.append(prevQuote)
+          done.append(q)
+          done.appendAll(placeholder("STRING", preservedStrings.length))
+          done.append(q)
+          // `/*` inside string literal should not be regarded as start signal of comment part.
+          // thus, must not be removed from processed output.
+          handleCommentsAndStrings(
+            remains,
+            done,
+            preservedComments,
+            stringPart.dropRight(1).mkString :: preservedStrings,
+            charset
+          )}
       case (_, untilComment, fromComment @ ('/' :: '*' :: comment)) =>
-        done.appendAll(untilComment)
+        done.appendAll(untilComment.reverse)
         // remove leading `/*     `
         fromComment.drop(2).dropWhile(_.isWhitespace) match {
           case '!' :: needPreserve => // e.g. `/*      !KEEP THIS COMMENT... `
@@ -292,10 +308,12 @@ object CSSMinifier {
                 done.append(placeholder("COMMENT", preservedComments.length))
                 done.appendAll("*/")
                 // spaces between end of a comment and start of next element can be removed;
-                compressComments(
+                handleCommentsAndStrings(
                   remains.dropWhile(_.isWhitespace),
                   done,
-                  comment.dropRight(2).mkString :: preservedComments
+                  comment.dropRight(2).mkString :: preservedComments,
+                  preservedStrings,
+                  charset
                 )
             }
           case _ =>
@@ -307,16 +325,18 @@ object CSSMinifier {
                 // _,....*/,remains
                 // discard comment part and continue
                 // spaces between end of a comment and start of next element can be removed;
-                compressComments(
+                handleCommentsAndStrings(
                   remains.dropWhile(_.isWhitespace),
                   done,
-                  preservedComments
+                  preservedComments,
+                  preservedStrings,
+                  charset
                 )
             }
         }
       case (_, withoutComments, _) =>
-        done.appendAll(withoutComments)
-        (done.toString(), preservedComments.reverse)
+        done.appendAll(withoutComments.reverse)
+        (done.toString().trim, preservedComments.reverse,preservedStrings.reverse,charset)
     }
   }
 
@@ -326,18 +346,22 @@ object CSSMinifier {
 
     // before compress ,we need to preserve strings to avoid accidentally
     // minifying string like "...\*................*\..."
-    val (withoutComments, preservedComments) = compressComments(
+    val (withoutComments, preservedComments,preservedStrings,charset) = handleCommentsAndStrings(
       cssWithoutDataURL.toList
     )
-    val s0 = handleCharsets(handleEmptyLike(withoutComments.toList))
-    val s1 = preservedURLs.zipWithIndex.foldLeft(s0){case (acc,(url,idx))=>
-        acc.replace(placeholder("URL",idx),url)
-    }
-    preservedComments.zipWithIndex.foldLeft(s1){case (acc,(comment,idx))=>
-        acc.replace(placeholder("COMMENT",idx),comment)
-    }
     // handleZeros
     // handleColors
+    val s0 = handleEmptyLike(withoutComments.toList).mkString
+    val s1 = preservedURLs.zipWithIndex.foldLeft(s0) { case (acc, (url, idx)) =>
+      acc.replace(placeholder("URL", idx), url)
+    }
+    val s2 = preservedComments.zipWithIndex.foldLeft(s1) { case (acc, (comment, idx)) =>
+      acc.replace(placeholder("COMMENT", idx), comment)
+    }
+     charset.getOrElse("") ++ preservedStrings.zipWithIndex.foldLeft(s2) { case (acc, (str, idx)) =>
+      acc.replace(placeholder("STRING", idx), str)
+    }
+
   }
 
   @tailrec

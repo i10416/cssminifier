@@ -163,7 +163,7 @@ class CSSMinifierTest extends munit.FunSuite {
     assert(!res.mkString.contains(";;"))
     assert(!res.mkString.contains(";}"))
   }
-  test("handleComments removes comments") {
+ /* test("handleComments removes comments") {
     val (res, preserved) = CSSMinifier.compressComments(sample.toList)
     assert(!res.mkString.contains("/* this is a comment to be removed */"))
     assert(res.mkString.contains("/*____PRESERVED_COMMENT_TOKEN__0___*/"))
@@ -177,7 +177,7 @@ class CSSMinifierTest extends munit.FunSuite {
       " This is another important comment not to be removed!!"
     )
 
-  }
+  }*/
   test("handleCharset keeps only the first @charset declaration") {
     val res = CSSMinifier.handleCharsets(""".klass{};.other.klass{};@charset "utf-8"; .klass {foo:1};@charset "utf-16";.other .klass {};@charset "utf-32"; """.toList)
     assert(res.startsWith("""@charset "utf-8";"""))
