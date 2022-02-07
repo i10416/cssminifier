@@ -38,35 +38,6 @@ object CSSMinifier {
 
   }
 
-  
-  @tailrec
-  def handleCharsets(
-      str: List[Char],
-      theFirstCharsetRule: Option[String] = None,
-      result: StringBuilder = new StringBuilder
-  ): String = {
-    (str.indexOfSlice("@charset"), theFirstCharsetRule) match {
-      // at least one @charset was found while processing and there remains no @charset
-      case (n, Some(charset)) if n < 0 => charset ++ result.toString
-      // no @charset was found while processing and there remains no @charset
-      case (n, None) if n < 0 => result.toString
-      // the first @charset is  found
-      case (n, None) =>
-        val beforeCharset = str.take(n)
-        result.appendAll(beforeCharset)
-        val (_, charset, remains) =
-          splitWhereAfter(str.drop(n), (_, c) => c == ';')
-        handleCharsets(remains, Some(charset.mkString), result)
-      case (n, Some(_)) =>
-        val beforeCharset = str.take(n)
-        result.appendAll(beforeCharset)
-        handleCharsets(
-          str.drop(n).dropWhile(_ != ';'),
-          theFirstCharsetRule,
-          result
-        )
-    }
-  }
 
   /** generate placeholder to preserve contents in original css
     */

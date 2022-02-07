@@ -178,11 +178,4 @@ class CSSMinifierTest extends munit.FunSuite {
     )
 
   }*/
-  test("handleCharset keeps only the first @charset declaration") {
-    val res = CSSMinifier.handleCharsets(""".klass{};.other.klass{};@charset "utf-8"; .klass {foo:1};@charset "utf-16";.other .klass {};@charset "utf-32"; """.toList)
-    assert(res.startsWith("""@charset "utf-8";"""))
-    assert(!res.contains(""""@charset "utf-16";""""))
-    assert(!res.contains(""""@charset "utf-32";""""))
-
-  }
 }
