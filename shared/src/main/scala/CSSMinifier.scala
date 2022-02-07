@@ -172,7 +172,7 @@ object CSSMinifier {
       case (
             ws :: tail,
             Some(
-              char @ (';' | '{' | '}' | '\r' | ']' | '\n' | '=' | '>' | '!' |
+              char @ (';' | '{' | '}' | '\r' | '\n' | '=' | '>' | '!' | '('| '['|
               ',')
             )
           ) if ws.isWhitespace =>
@@ -323,16 +323,20 @@ object CSSMinifier {
     // handleZeros
     // handleColors
     val s0 = handleEmptyLike(withoutComments.toList).mkString
+    // put urls back
     val s1 = preservedURLs.zipWithIndex.foldLeft(s0) { case (acc, (url, idx)) =>
       acc.replace(placeholder("URL", idx), url)
     }
+    // put comments back
     val s2 = preservedComments.zipWithIndex.foldLeft(s1) { case (acc, (comment, idx)) =>
       acc.replace(placeholder("COMMENT", idx), comment)
     }
+    // put strings back
      charset.getOrElse("") ++ preservedStrings.zipWithIndex.foldLeft(s2) { case (acc, (str, idx)) =>
       acc.replace(placeholder("STRING", idx), str)
-    }
-
+    }.replaceAll(":0 0 0 0(;|})",":0$1") // Replace 0 0 0 0; with 0.
+     .replaceAll(":0 0 0(;|})", ":0$1") // Replace 0 0 0; with 0.
+     .replaceAll("(?<!flex):0 0(;|})", ":0$1")
   }
 
   @tailrec
