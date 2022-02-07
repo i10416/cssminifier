@@ -185,7 +185,7 @@ object CSSMinifier {
       // e.g. ;} => }
       case ('}' :: tail, Some(';')) =>
         val _ :: remains = result
-        handleEmptyLike(tail, Some('}'), remains)
+        handleEmptyLike(tail, Some('}'), '}'::remains)
       // remove new lines
       case (('\r' | '\n') :: tail, Some(_)) =>
         handleEmptyLike(tail, prev, result)
