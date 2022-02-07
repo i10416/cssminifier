@@ -26,7 +26,7 @@ Following features are supported.
 libraryDependencies += "dev.i10416" %% "cssminifier" % "0.0.1"
 ```
 
-For JVM or Native platform, use `%%%` instead of `%%`.
+For JS or Native platform, use `%%%` instead of `%%`.
 
 ```scala
 libraryDependencies += "dev.i10416" %%% "cssminifier" % "0.0.1"
