@@ -329,10 +329,15 @@ object CSSMinifier {
     val (withoutComments, preservedComments) = compressComments(
       cssWithoutDataURL.toList
     )
-    handleCharsets(handleEmptyLike(withoutComments.toList))
+    val s0 = handleCharsets(handleEmptyLike(withoutComments.toList))
+    val s1 = preservedURLs.zipWithIndex.foldLeft(s0){case (acc,(url,idx))=>
+        acc.replace(placeholder("URL",idx),url)
+    }
+    preservedComments.zipWithIndex.foldLeft(s1){case (acc,(comment,idx))=>
+        acc.replace(placeholder("COMMENT",idx),comment)
+    }
     // handleZeros
     // handleColors
-    // put preserved items back
   }
 
   @tailrec
