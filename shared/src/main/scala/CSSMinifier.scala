@@ -210,8 +210,8 @@ object CSSMinifier {
 
   /** Assume s is a complete css content or valid css content just after comment
     * block;
-    *
-    * todo: preserving string literal while traversing
+    * This function removes comments except ones starting with `!`,
+      preserve comments starts with `!`,  string literals and the fisrt charset.
     */
   @tailrec
   def handleCommentsAndStrings(
