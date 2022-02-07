@@ -163,7 +163,7 @@ object CSSMinifier {
         handleEmptyLike(tail, prev, result)
       // some characters are not affected after removing leading whitespace
       case (
-            (char @ ('=' | '(' | ')' | '}' | ';' | ',' | '>' | '[')) :: tail,
+            (char @ ('=' | '{' |'(' | ')' | '}' | ';' | ',' | '>' | '[')) :: tail,
             Some(ws)
           ) if ws.isWhitespace =>
         val _ :: remains = result
