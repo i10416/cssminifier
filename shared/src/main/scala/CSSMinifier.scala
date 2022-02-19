@@ -38,7 +38,6 @@ object CSSMinifier {
 
   }
 
-
   /** generate placeholder to preserve contents in original css
     */
   private def placeholder(label: String, n: Int) =
@@ -129,7 +128,11 @@ object CSSMinifier {
     str match {
       case head :: tail if matcher(prev, head) =>
         val (prev :: other) = consumed
-        (cursor, if(shouldReverseBack) other.reverse else other, prev :: head :: tail)
+        (
+          cursor,
+          if (shouldReverseBack) other.reverse else other,
+          prev :: head :: tail
+        )
       case head :: tail =>
         splitWhereBefore(
           tail,
@@ -139,7 +142,8 @@ object CSSMinifier {
           Some(head),
           shouldReverseBack
         )
-      case Nil => (cursor, if(shouldReverseBack) consumed.reverse else consumed, Nil)
+      case Nil =>
+        (cursor, if (shouldReverseBack) consumed.reverse else consumed, Nil)
     }
   }
 
@@ -163,7 +167,8 @@ object CSSMinifier {
         handleEmptyLike(tail, prev, result)
       // some characters are not affected after removing leading whitespace
       case (
-            (char @ ('=' | '{' |'(' | ')' | '}' | ';' | ',' | '>' | '[')) :: tail,
+            (char @ ('=' | '{' | '(' | ')' | '}' | ';' | ',' | '>' |
+            '[')) :: tail,
             Some(ws)
           ) if ws.isWhitespace =>
         val _ :: remains = result
@@ -172,8 +177,8 @@ object CSSMinifier {
       case (
             ws :: tail,
             Some(
-              char @ (';' | '{' | '}' | '\r' | '\n' | '=' | '>' | '!' | '('| '['|
-              ',')
+              char @ (';' | '{' | '}' | '\r' | '\n' | '=' | '>' | '!' | '(' |
+              '[' | ',')
             )
           ) if ws.isWhitespace =>
         handleEmptyLike(tail, prev, result)
@@ -185,7 +190,7 @@ object CSSMinifier {
       // e.g. ;} => }
       case ('}' :: tail, Some(';')) =>
         val _ :: remains = result
-        handleEmptyLike(tail, Some('}'), '}'::remains)
+        handleEmptyLike(tail, Some('}'), '}' :: remains)
       // remove new lines
       case (('\r' | '\n') :: tail, Some(_)) =>
         handleEmptyLike(tail, prev, result)
@@ -209,9 +214,8 @@ object CSSMinifier {
   def handleColors = {}
 
   /** Assume s is a complete css content or valid css content just after comment
-    * block;
-    * This function removes comments except ones starting with `!`,
-      preserve comments starts with `!`,  string literals and the fisrt charset.
+    * block; This function removes comments except ones starting with `!`,
+    * preserve comments starts with `!`, string literals and the fisrt charset.
     */
   @tailrec
   def handleCommentsAndStrings(
@@ -219,13 +223,22 @@ object CSSMinifier {
       done: StringBuilder = new StringBuilder,
       preservedComments: List[String] = Nil,
       preservedStrings: List[String] = Nil,
-      charset: Option[String]=None
-  ): (String, List[String],List[String],Option[String]) = {
-    splitWhereBefore(s, CharMatcher.openCommentOrString,shouldReverseBack = false) match {
+      charset: Option[String] = None
+  ): (String, List[String], List[String], Option[String]) = {
+    splitWhereBefore(
+      s,
+      CharMatcher.openCommentOrString,
+      shouldReverseBack = false
+    ) match {
       // consumed all chars and there remains no comment start nor string literal start.
       case (_, withoutComments, Nil) =>
         done.appendAll(withoutComments.reverse)
-        (done.toString().trim, preservedComments.reverse,preservedStrings.reverse,charset)
+        (
+          done.toString().trim,
+          preservedComments.reverse,
+          preservedStrings.reverse,
+          charset
+        )
       //avoid mistakenly remove comment-like value from string
       case (
             _,
@@ -233,24 +246,32 @@ object CSSMinifier {
             // we are sure char before quote char here won't escape quote
             prevQuote :: (q @ ('\"' | '\'')) :: startStringLiteral
           ) =>
-          val (_, stringPart, remains) =
-            splitWhereAfter(startStringLiteral, CharMatcher.closeString(q))
-          /** Authors using an @charset rule must place the rule at the very beginning
-            * of the style sheet, __preceded by no characters__. @charset must be
-            * lowercase, no backslash escapes, followed by the encoding name, followed
-            * by ";".
-            */
-            // handle charset here as charset contains string literal
-          if(prevQuote.isWhitespace && q == '\"' && consumed.startsWith("tesrahc@") && remains.startsWith(";")){
-          done.appendAll(consumed.drop(8).reverse) // drop `@charset` from consumed string
-            handleCommentsAndStrings(
-               remains.drop(1), // remove semicolon
-               done,
-             preservedComments,
-               preservedStrings,
-               if(charset.isEmpty) Some( s"@charset \"${stringPart.mkString};" ) else charset
-            )
-          } else {
+        val (_, stringPart, remains) =
+          splitWhereAfter(startStringLiteral, CharMatcher.closeString(q))
+
+        /** Authors using an @charset rule must place the rule at the very
+          * beginning of the style sheet, __preceded by no characters__.
+          * @charset must be lowercase, no backslash escapes, followed by the
+          * encoding name, followed by ";".
+          */
+        // handle charset here as charset contains string literal
+        if (
+          prevQuote.isWhitespace && q == '\"' && consumed.startsWith(
+            "tesrahc@"
+          ) && remains.startsWith(";")
+        ) {
+          done.appendAll(
+            consumed.drop(8).reverse
+          ) // drop `@charset` from consumed string
+          handleCommentsAndStrings(
+            remains.drop(1), // remove semicolon
+            done,
+            preservedComments,
+            preservedStrings,
+            if (charset.isEmpty) Some(s"@charset \"${stringPart.mkString};")
+            else charset
+          )
+        } else {
           done.appendAll(consumed.reverse)
           done.append(prevQuote)
           done.append(q)
@@ -264,7 +285,8 @@ object CSSMinifier {
             preservedComments,
             stringPart.dropRight(1).mkString :: preservedStrings,
             charset
-          )}
+          )
+        }
       case (_, untilComment, fromComment @ ('/' :: '*' :: comment)) =>
         done.appendAll(untilComment.reverse)
         // remove leading `/*     `
@@ -307,7 +329,12 @@ object CSSMinifier {
         }
       case (_, withoutComments, _) =>
         done.appendAll(withoutComments.reverse)
-        (done.toString().trim, preservedComments.reverse,preservedStrings.reverse,charset)
+        (
+          done.toString().trim,
+          preservedComments.reverse,
+          preservedStrings.reverse,
+          charset
+        )
     }
   }
 
@@ -317,9 +344,10 @@ object CSSMinifier {
 
     // before compress ,we need to preserve strings to avoid accidentally
     // minifying string like "...\*................*\..."
-    val (withoutComments, preservedComments,preservedStrings,charset) = handleCommentsAndStrings(
-      cssWithoutDataURL.toList
-    )
+    val (withoutComments, preservedComments, preservedStrings, charset) =
+      handleCommentsAndStrings(
+        cssWithoutDataURL.toList
+      )
     // handleZeros
     // handleColors
     val s0 = handleEmptyLike(withoutComments.toList).mkString
@@ -328,15 +356,18 @@ object CSSMinifier {
       acc.replace(placeholder("URL", idx), url)
     }
     // put comments back
-    val s2 = preservedComments.zipWithIndex.foldLeft(s1) { case (acc, (comment, idx)) =>
-      acc.replace(placeholder("COMMENT", idx), comment)
+    val s2 = preservedComments.zipWithIndex.foldLeft(s1) {
+      case (acc, (comment, idx)) =>
+        acc.replace(placeholder("COMMENT", idx), comment)
     }
     // put strings back
-     charset.getOrElse("") ++ preservedStrings.zipWithIndex.foldLeft(s2) { case (acc, (str, idx)) =>
-      acc.replace(placeholder("STRING", idx), str)
-    }.replaceAll(":0 0 0 0(;|})",":0$1") // Replace 0 0 0 0; with 0.
-     .replaceAll(":0 0 0(;|})", ":0$1") // Replace 0 0 0; with 0.
-     .replaceAll("(?<!flex):0 0(;|})", ":0$1")
+    charset.getOrElse("") ++ preservedStrings.zipWithIndex
+      .foldLeft(s2) { case (acc, (str, idx)) =>
+        acc.replace(placeholder("STRING", idx), str)
+      }
+      .replaceAll(":0 0 0 0(;|})", ":0$1") // Replace 0 0 0 0; with 0.
+      .replaceAll(":0 0 0(;|})", ":0$1") // Replace 0 0 0; with 0.
+      .replaceAll("(?<!flex):0 0(;|})", ":0$1")
   }
 
   @tailrec

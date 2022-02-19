@@ -163,7 +163,7 @@ class CSSMinifierTest extends munit.FunSuite {
     assert(!res.mkString.contains(";;"))
     assert(!res.mkString.contains(";}"))
   }
- /* test("handleComments removes comments") {
+  /* test("handleComments removes comments") {
     val (res, preserved) = CSSMinifier.compressComments(sample.toList)
     assert(!res.mkString.contains("/* this is a comment to be removed */"))
     assert(res.mkString.contains("/*____PRESERVED_COMMENT_TOKEN__0___*/"))

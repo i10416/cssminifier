@@ -37,10 +37,18 @@ lazy val lib = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .settings(
     libraryDependencies ++= Deps.shared.value,
     // munit has not released the version which supports scala native in scala 3
-    // libraryDependencies += "org.scalameta" %%% "munit" % "1.0.0-M1" % Test,
     name := projectName,
-    scalaVersion := scala3,
-    crossScalaVersions := Seq(scala213, scala3)
+    scalaVersion := scala213
   )
-  .jsSettings()
-  .jvmSettings()
+  .jsSettings(
+    crossScalaVersions := Seq(scala213, scala3),
+    libraryDependencies += ("org.scalameta" %%% "munit" % "1.0.0-M1") % Test
+  )
+  .jvmSettings(
+    crossScalaVersions := Seq(scala213, scala3),
+    libraryDependencies += ("org.scalameta" %%% "munit" % "1.0.0-M1") % Test
+  )
+  .nativeSettings(
+    crossScalaVersions := Seq(scala213),
+    libraryDependencies += ("org.scalameta" %%% "munit" % "1.0.0-M1") % Test
+  )
