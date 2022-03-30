@@ -239,7 +239,7 @@ object CSSMinifier {
           preservedStrings.reverse,
           charset
         )
-      //avoid mistakenly remove comment-like value from string
+      // avoid mistakenly remove comment-like value from string
       case (
             _,
             consumed,
@@ -251,8 +251,9 @@ object CSSMinifier {
 
         /** Authors using an @charset rule must place the rule at the very
           * beginning of the style sheet, __preceded by no characters__.
-          * @charset must be lowercase, no backslash escapes, followed by the
-          * encoding name, followed by ";".
+          * @charset
+          *   must be lowercase, no backslash escapes, followed by the encoding
+          *   name, followed by ";".
           */
         // handle charset here as charset contains string literal
         if (
