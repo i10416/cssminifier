@@ -7,14 +7,11 @@ lazy val projectName = "cssminifier"
 val githubId = "i10416"
 resolvers += Resolver.sonatypeRepo("snapshots")
 // WARN: Make sure build.sbt does not define any of the following settings(https://github.com/sbt/sbt-ci-release)
-lazy val publishSettings = Seq(
-  sonatypeCredentialHost := "s01.oss.sonatype.org",
-  sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
-)
 
 // todo: add task to create github repository from this
 inThisBuild(
   Seq(
+    versionScheme := Some("early-semver"),
     organization := "dev.i10416",
     licenses := List(
       "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")
@@ -28,6 +25,8 @@ inThisBuild(
         url(s"https://github.com/$githubId")
       )
     ),
+    sonatypeCredentialHost := "s01.oss.sonatype.org",
+    sonatypeRepository := "https://s01.oss.sonatype.org/service/local",
     scalacOptions ++= Seq("-feature", "-deprecation")
   )
 )
