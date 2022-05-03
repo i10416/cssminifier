@@ -1,5 +1,6 @@
 # Simple CSS Minifier in Pure Scala
 
+[![Release](https://github.com/i10416/cssminifier/actions/workflows/release.yml/badge.svg)](https://github.com/i10416/cssminifier/actions/workflows/release.yml)
 
 |scala 2.13|scala 3|
 |---|---|
