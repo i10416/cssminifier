@@ -48,6 +48,9 @@ lazy val lib = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies += ("org.scalameta" %%% "munit" % "1.0.0-M3") % Test
   )
   .nativeSettings(
-    crossScalaVersions := Seq(scala213),
-    libraryDependencies += ("org.scalameta" %%% "munit" % "1.0.0-M3") % Test
+    crossScalaVersions := Seq(scala213 /*, scala3*/ ),
+    libraryDependencies ++=
+      Seq(
+        "org.scalameta" %%% "munit" % "1.0.0-M3" % Test
+      )
   )
