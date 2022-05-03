@@ -273,8 +273,7 @@ object CSSMinifier {
             done,
             preservedComments,
             preservedStrings,
-            if (charset.isEmpty) Some(s"@charset \"${stringPart.mkString};")
-            else charset
+            charset.fold(Some(s"@charset \"${stringPart.mkString};"))(Some(_))
           )
         } else {
           done.appendAll(consumed.reverse)

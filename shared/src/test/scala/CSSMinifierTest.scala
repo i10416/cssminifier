@@ -150,11 +150,22 @@ class CSSMinifierTest extends munit.FunSuite {
     )
     assertEquals(beforeComment1.toList, invalidCommentExistsAtTheStart.toList)
   }
+  test("handleEmptyLike removes repeated whitespace-like chars") {
+    val data = """|.has {
+                  |  .whitespaces {
+                  |    prop: value;
+                  |}
+                  |}
+                  |""".stripMargin
+    val res = CSSMinifier.handleEmptyLike(data.toList)
+    assertEquals(res.mkString, ".has{.whitespaces{prop: value}}")
+  }
   test("handleEmptyLike removes empty rules") {
     val res = CSSMinifier.handleEmptyLike(sample.toList)
     assert(!res.mkString.contains(".klass foo bar"))
     assert(!res.mkString.contains(".empty rule"))
     assert(res.mkString.contains(".has rule"))
+    assert(res.mkString.contains("font-size: 16px"))
 
   }
   test("handleEmptyLike removes repeated semi-colon ") {
@@ -162,6 +173,19 @@ class CSSMinifierTest extends munit.FunSuite {
     assert(res.mkString.contains(";"))
     assert(!res.mkString.contains(";;"))
     assert(!res.mkString.contains(";}"))
+  }
+  test("handleComments removes second and subsequent @`charset`s") {
+    val data = """|
+                  |@charset "utf-8";
+                  |
+                  |@charset "utf-16";
+                  |
+                  |@charset "utf-32";
+                  |""".stripMargin
+    val (res, _, _, charset) =
+      CSSMinifier.handleCommentsAndStrings(data.toList)
+    assertEquals(res, "")
+    assertEquals(charset, Some("""@charset "utf-8";"""))
   }
   test("handleComments removes comments") {
     val (res, preservedComments, preservedStrings, charset) =
@@ -177,6 +201,5 @@ class CSSMinifierTest extends munit.FunSuite {
       preservedComments.apply(1),
       " This is another important comment not to be removed!!"
     )
-
   }
 }
