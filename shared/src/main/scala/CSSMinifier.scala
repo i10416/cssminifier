@@ -216,6 +216,10 @@ object CSSMinifier {
   /** Assume s is a complete css content or valid css content just after comment
     * block; This function removes comments except ones starting with `!`,
     * preserve comments starts with `!`, string literals and the fisrt charset.
+    *
+    * @return
+    *   (text without comments and strings to be removed,comments to be
+    *   preserved,strings to be preserved,charset)
     */
   @tailrec
   def handleCommentsAndStrings(
@@ -295,7 +299,7 @@ object CSSMinifier {
           case '!' :: needPreserve => // e.g. `/*      !KEEP THIS COMMENT... `
             splitWhereAfter(needPreserve, CharMatcher.closeComment) match {
               case (_, comment, remains) =>
-                done.appendAll("/*")
+                done.appendAll("/*!")
                 // preserve comment
                 // remains can be Nil if there is no close pattern, but it is Ok because
                 // we regard the all remaining part as a comment.

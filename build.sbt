@@ -28,7 +28,7 @@ inThisBuild(
         url(s"https://github.com/$githubId")
       )
     ),
-    scalacOptions ++= Nil
+    scalacOptions ++= Seq("-feature", "-deprecation")
   )
 )
 
@@ -36,7 +36,6 @@ lazy val lib = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("."))
   .settings(
     libraryDependencies ++= Deps.shared.value,
-    // munit has not released the version which supports scala native in scala 3
     name := projectName,
     scalaVersion := scala213
   )
@@ -49,6 +48,6 @@ lazy val lib = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     libraryDependencies += ("org.scalameta" %%% "munit" % "1.0.0-M3") % Test
   )
   .nativeSettings(
-    crossScalaVersions := Seq(scala213),
+    crossScalaVersions := Seq(scala213, scala3),
     libraryDependencies += ("org.scalameta" %%% "munit" % "1.0.0-M3") % Test
   )
