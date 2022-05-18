@@ -31,6 +31,13 @@ inThisBuild(
   )
 )
 
+lazy val root = project
+  .in(file("."))
+  .aggregate(lib.js, lib.jvm, lib.native)
+  .settings(
+    publish / skip := true
+  )
+
 lazy val lib = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   .in(file("."))
   .settings(
