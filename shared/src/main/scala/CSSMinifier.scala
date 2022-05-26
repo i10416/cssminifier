@@ -261,9 +261,9 @@ object CSSMinifier {
           */
         // handle charset here as charset contains string literal
         if (
-          prevQuote.isWhitespace && q == '\"' && consumed.startsWith(
+          prevQuote.isWhitespace && q == '\"' && (consumed.startsWith(
             "tesrahc@"
-          ) && remains.startsWith(";")
+          ) || consumed.startsWith("TESRAHC@")) && remains.startsWith(";")
         ) {
           done.appendAll(
             consumed.drop(8).reverse
