@@ -273,7 +273,9 @@ object CSSMinifier {
             done,
             preservedComments,
             preservedStrings,
-            charset.fold(Some(s"@charset \"${stringPart.mkString};"))(Some(_))
+            charset.fold(Some(s"@charset \"${stringPart.mkString};"))(c =>
+              Some(c.toLowerCase)
+            )
           )
         } else {
           done.appendAll(consumed.reverse)

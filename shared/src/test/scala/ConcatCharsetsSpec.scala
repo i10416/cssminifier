@@ -1,6 +1,7 @@
 package dev.i10416
 import dev.i10416.CSSMinifier
 class ConcatCharsetsSpec extends munit.FunSuite {
+  // taken from https://github.com/yui/yuicompressor/blob/master/tests/concat-charset.css
   private val sample =
     """/* This is invalid CSS, but frequently happens as a result of concatenation. */
                           |@CHARSET "utf-8";
