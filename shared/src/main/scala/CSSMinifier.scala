@@ -5,9 +5,12 @@ import scala.collection.immutable
 import scala.util.matching.Regex
 import scala.collection.mutable
 import scala.scalajs.js.annotation.JSExportTopLevel
+import dev.i10416.DataURLPat
+import java.util.regex.Matcher
+import scala.util.matching.Regex.Match
 
 @JSExportTopLevel("CSSMinifier")
-object CSSMinifier {
+object CSSMinifier extends DataURLPat {
   object CharMatcher {
     def openComment = (prev: Option[Char], next: Char) =>
       (prev, next) match {
@@ -42,7 +45,6 @@ object CSSMinifier {
     */
   private def placeholder(label: String, n: Int) =
     s"____PRESERVED_${label.toUpperCase()}_TOKEN__${n}___"
-  final val dataURLStartFrom = "(?i)url\\(\\s*([\"']?)data\\:".r
   final val startComment = "/\\*".r
 
   /** Leave data urls alone to increase parse performance.
@@ -53,28 +55,10 @@ object CSSMinifier {
       done: mutable.StringBuilder = new StringBuilder(),
       preservedURLs: List[String] = Nil
   ): (String, List[String]) = {
-    dataURLStartFrom.findFirstMatchIn(s) match {
-      // url(data:...)
-      case Some(urlWithoutQuotes) if urlWithoutQuotes.group(1).isEmpty => {
-        val close = ')'
-        val startFrom = urlWithoutQuotes.start + 4 // skip `url(`
-        val (leading, trailing) = s.splitAt(startFrom)
-        val (url, tail) =
-          readUntilClosingPairOrEOF(trailing.toList, close) match {
-            // remains start from just after `)`, do NOT contain `)`.
-            case Some((dataURL, remains)) => (dataURL.trim(), remains.mkString)
-            case None                     => ??? // Left(expect ')' but EOF)
-          }
-        done.append(leading)
-        done.append(placeholder("URL", preservedURLs.length))
-        done.append(close)
-        println(tail)
-        preserveURLs(tail, done, url :: preservedURLs)
-      }
-      // url("data:...") or url('data:...')
-      case Some(quoteLike) => {
-        val quote = if (quoteLike.group(1) == "\"") '\"' else '\'' // " or '
-        val startFrom = quoteLike.start + 5 // skip `url(<quote>`
+    matchDataURLStart(s) match {
+      case Some((Some(quoteLike), startPos)) => {
+        val quote = if (quoteLike == "\"") '\"' else '\'' // " or '
+        val startFrom = startPos + 5 // skip `url(<quote>`
         val (leading, trailing) = s.splitAt(startFrom)
         // `leading` contains `url("` at the end of string
         val (url, tail) =
@@ -87,6 +71,23 @@ object CSSMinifier {
         done.append(leading)
         done.append(placeholder("URL", preservedURLs.length))
         done.append(quote)
+        preserveURLs(tail, done, url :: preservedURLs)
+      }
+
+      case Some((None, startPos)) => {
+        val close = ')'
+        val startFrom = startPos + 4 // skip `url(`
+        val (leading, trailing) = s.splitAt(startFrom)
+        val (url, tail) =
+          readUntilClosingPairOrEOF(trailing.toList, close) match {
+            // remains start from just after `)`, do NOT contain `)`.
+            case Some((dataURL, remains)) => (dataURL.trim(), remains.mkString)
+            case None                     => ??? // Left(expect ')' but EOF)
+          }
+        done.append(leading)
+        done.append(placeholder("URL", preservedURLs.length))
+        done.append(close)
+        println(tail)
         preserveURLs(tail, done, url :: preservedURLs)
       }
       case None =>
@@ -398,6 +399,30 @@ object CSSMinifier {
       case (head :: tail, None) =>
         result.append(head)
         readUntilClosingPairOrEOF(tail, close, result, Some(head))
+    }
+  }
+}
+
+object DataURLPattern {
+  def unapply(m: Matcher): Option[(Option[String], Int)] = {
+    if (m.matches) {
+      m.groupCount match {
+        case 0 => None
+        case 1 => Some(None, m.start)
+        case 2 => Some(Some(m.group(1)), m.start)
+        case _ => None
+      }
+    } else {
+      None
+    }
+  }
+  def unapply(m: Option[Match]): Option[(Option[String], Int)] = {
+    m match {
+      case None => None
+      case Some(urlWithoutQuotes) if urlWithoutQuotes.group(1).isEmpty =>
+        Some(None, urlWithoutQuotes.start)
+      case Some(urlWithQuoteLike) =>
+        Some(Some(urlWithQuoteLike.group(1)), urlWithQuoteLike.start)
     }
   }
 }
