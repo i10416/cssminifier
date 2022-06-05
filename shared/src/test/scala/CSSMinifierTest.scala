@@ -218,12 +218,13 @@ class CSSMinifierTest extends munit.FunSuite {
     val res =
       CSSMinifier.run(s"""|
                          |{
-                         |  margin: 0 0 0 0;
-                         |  padding: 0 0 0;
-                         |  flex: 0 0;
-                         |  margin: 0 0 0 0
+                         |  margin  :   0    0 0  0 ;
+                         |  padding :  0 0   0 ;
+                         |  flex:  0 0 ;
+                         |  border  :   none ;
+                         |  margin  :  0 0 0 0
                          |}
                          |""".stripMargin)
-    assertEquals(res, s"{margin:0;padding:0;flex:0 0;margin:0}")
+    assertEquals(res, s"{margin:0;padding:0;flex:0 0;border:0;margin:0}")
   }
 }

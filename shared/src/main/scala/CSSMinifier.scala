@@ -168,12 +168,26 @@ object CSSMinifier extends DataURLPat {
         handleEmptyLike(tail, prev, result)
       // some characters are not affected after removing leading whitespace
       case (
-            (char @ ('=' | '{' | '(' | ')' | '}' | ';' | ',' | '>' |
-            '[')) :: tail,
+            (char @ ('=' | '{' | '(' | ')' | '}' | ';' | ',' | '>' | '[' |
+            ':')) :: tail,
             Some(ws)
           ) if ws.isWhitespace =>
-        val _ :: remains = result
-        handleEmptyLike(tail, Some(char), char :: remains)
+        if (result.startsWith(" 0 0:")) {
+          val maybeFlex = result.drop(5)
+          if (maybeFlex.startsWith("xelf")) {
+            handleEmptyLike(tail, Some(char), char :: result.drop(1))
+          } else {
+            handleEmptyLike(tail, Some(char), char :: result.drop(3))
+          }
+        } else if (result.startsWith(" 0 0 0:")) {
+          handleEmptyLike(tail, Some(char), char :: result.drop(5))
+        } else if (result.startsWith(" 0 0 0 0:")) {
+          handleEmptyLike(tail, Some(char), char :: result.drop(7))
+        } else if (result.startsWith(" enon:redrob")) {
+          handleEmptyLike(tail, Some(char), char :: '0' :: result.drop(5))
+        } else {
+          handleEmptyLike(tail, Some(char), char :: result.drop(1))
+        }
       // remove trailing space after some characters
       case (
             ws :: tail,
@@ -208,7 +222,7 @@ object CSSMinifier extends DataURLPat {
         }
       // 0; or 0; then backtrack to find <not `flex`>:0 0;
       case ((e @ (';' | '}')) :: tail, Some('0'))
-          if result.startsWith(Seq('0', ' ', '0', ':')) => {
+          if result.startsWith("0 0:") => {
         if (result.drop(4).startsWith("xelf")) {
           handleEmptyLike(tail, Some(e), e :: result)
         } else {
@@ -217,13 +231,17 @@ object CSSMinifier extends DataURLPat {
       }
       // 0; or 0; then backtrack to find :0 0 0;
       case ((e @ (';' | '}')) :: tail, Some('0'))
-          if result.startsWith(Seq('0', ' ', '0', ' ', '0', ':')) => {
+          if result.startsWith("0 0 0:") => {
         handleEmptyLike(tail, Some(e), e :: result.drop(4))
       }
       // 0; or 0; then backtrack to find :0 0 0 0;
       case ((e @ (';' | '}')) :: tail, Some('0'))
-          if result.startsWith(Seq('0', ' ', '0', ' ', '0', ' ', '0', ':')) => {
+          if result.startsWith("0 0 0 0:") => {
         handleEmptyLike(tail, Some(e), e :: result.drop(6))
+      }
+      case ((e @ (';' | '}')) :: tail, Some('e'))
+          if result.startsWith("enon:redrob") => {
+        handleEmptyLike(tail, Some(e), e :: '0' :: result.drop(4))
       }
       case (head :: tail, prev) =>
         handleEmptyLike(tail, Some(head), head :: result)
