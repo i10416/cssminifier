@@ -183,8 +183,23 @@ object CSSMinifier extends DataURLPat {
           handleEmptyLike(tail, Some(char), char :: result.drop(5))
         } else if (result.startsWith(" 0 0 0 0:")) {
           handleEmptyLike(tail, Some(char), char :: result.drop(7))
-        } else if (result.startsWith(" enon:redrob")) {
-          handleEmptyLike(tail, Some(char), char :: '0' :: result.drop(5))
+        } else if (result.startsWith(" enon:")) {
+          val noneable = result.drop(6)
+          if (noneable.startsWith("redrob")) {
+            handleEmptyLike(tail, Some(char), char :: '0' :: ':' :: noneable)
+          } else if (noneable.startsWith("dnuorgkcab")) {
+            handleEmptyLike(tail, Some(char), char :: '0' :: ':' :: noneable)
+          } else if (noneable.startsWith("pot-redrob")) {
+            handleEmptyLike(tail, Some(char), char :: '0' :: ':' :: noneable)
+          } else if (noneable.startsWith("tfel-redrob")) {
+            handleEmptyLike(tail, Some(char), char :: '0' :: ':' :: noneable)
+          } else if (noneable.startsWith("thgir-redrob")) {
+            handleEmptyLike(tail, Some(char), char :: '0' :: ':' :: noneable)
+          } else if (noneable.startsWith("mottob-redrob")) {
+            handleEmptyLike(tail, Some(char), char :: '0' :: ':' :: noneable)
+          } else {
+            handleEmptyLike(tail, Some(char), char :: result.drop(1))
+          }
         } else {
           handleEmptyLike(tail, Some(char), char :: result.drop(1))
         }
@@ -239,9 +254,25 @@ object CSSMinifier extends DataURLPat {
           if result.startsWith("0 0 0 0:") => {
         handleEmptyLike(tail, Some(e), e :: result.drop(6))
       }
+      // handle nones
       case ((e @ (';' | '}')) :: tail, Some('e'))
-          if result.startsWith("enon:redrob") => {
-        handleEmptyLike(tail, Some(e), e :: '0' :: result.drop(4))
+          if result.startsWith("enon:") => {
+        val noneable = result.drop(5)
+        if (noneable.startsWith("redrob")) {
+          handleEmptyLike(tail, Some(e), e :: '0' :: ':' :: noneable)
+        } else if (noneable.startsWith("dnuorgkcab")) {
+          handleEmptyLike(tail, Some(e), e :: '0' :: ':' :: noneable)
+        } else if (noneable.startsWith("pot-redrob")) {
+          handleEmptyLike(tail, Some(e), e :: '0' :: ':' :: noneable)
+        } else if (noneable.startsWith("tfel-redrob")) {
+          handleEmptyLike(tail, Some(e), e :: '0' :: ':' :: noneable)
+        } else if (noneable.startsWith("thgir-redrob")) {
+          handleEmptyLike(tail, Some(e), e :: '0' :: ':' :: noneable)
+        } else if (noneable.startsWith("mottob-redrob")) {
+          handleEmptyLike(tail, Some(e), e :: '0' :: ':' :: noneable)
+        } else {
+          handleEmptyLike(tail, Some(e), e :: result)
+        }
       }
       case (head :: tail, prev) =>
         handleEmptyLike(tail, Some(head), head :: result)
