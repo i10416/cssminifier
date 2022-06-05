@@ -202,4 +202,16 @@ class CSSMinifierTest extends munit.FunSuite {
       " This is another important comment not to be removed!!"
     )
   }
+  test("keep dataurl") {
+    val u0 = "url(\"data:THISISDATAURL\")"
+    val u1 = "url(data:THISISDATAURL)"
+    val res =
+      CSSMinifier.run(s"""|
+                         |{
+                         |  hoge: $u0;
+                         |  fuga: $u1
+                         |}
+                         |""".stripMargin)
+    assertEquals(res, s"{hoge: $u0;fuga: $u1}")
+  }
 }

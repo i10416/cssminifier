@@ -58,11 +58,11 @@ object CSSMinifier extends DataURLPat {
     matchDataURLStart(s) match {
       case Some((Some(quoteLike), startPos)) => {
         val quote = if (quoteLike == "\"") '\"' else '\'' // " or '
-        val startFrom = startPos + 5 // skip `url(<quote>`
+        val startFrom = startPos + 4 // skip `url(<quote>`
         val (leading, trailing) = s.splitAt(startFrom)
         // `leading` contains `url("` at the end of string
         val (url, tail) =
-          readUntilClosingPairOrEOF(trailing.toList, quote) match {
+          readUntilClosingPairOrEOF(trailing.drop(1).toList, quote) match {
             // `remains` start from char after closing char, do NOT contain `"` nor `'`.
             case Some((dataURL, remains)) => (dataURL.trim(), remains.mkString)
             case None =>
@@ -70,8 +70,8 @@ object CSSMinifier extends DataURLPat {
           }
         done.append(leading)
         done.append(placeholder("URL", preservedURLs.length))
-        done.append(quote)
-        preserveURLs(tail, done, url :: preservedURLs)
+//        done.append(quote)
+        preserveURLs(tail, done, ("\"" + url + "\"") :: preservedURLs)
       }
 
       case Some((None, startPos)) => {
@@ -374,7 +374,7 @@ object CSSMinifier extends DataURLPat {
       }
       .replaceAll(":0 0 0 0(;|})", ":0$1") // Replace 0 0 0 0; with 0.
       .replaceAll(":0 0 0(;|})", ":0$1") // Replace 0 0 0; with 0.
-      .replaceAll("(?<!flex):0 0(;|})", ":0$1")
+    // .replaceAll("(?<!flex):0 0(;|})", ":0$1")
   }
 
   @tailrec
