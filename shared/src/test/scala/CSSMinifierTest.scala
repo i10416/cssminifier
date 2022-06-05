@@ -158,14 +158,14 @@ class CSSMinifierTest extends munit.FunSuite {
                   |}
                   |""".stripMargin
     val res = CSSMinifier.handleEmptyLike(data.toList)
-    assertEquals(res.mkString, ".has{.whitespaces{prop: value}}")
+    assertEquals(res.mkString, ".has{.whitespaces{prop:value}}")
   }
   test("handleEmptyLike removes empty rules") {
     val res = CSSMinifier.handleEmptyLike(sample.toList)
     assert(!res.mkString.contains(".klass foo bar"))
     assert(!res.mkString.contains(".empty rule"))
     assert(res.mkString.contains(".has rule"))
-    assert(res.mkString.contains("font-size: 16px"))
+    assert(res.mkString.contains("font-size:16px"))
 
   }
   test("handleEmptyLike removes repeated semi-colon ") {
@@ -212,6 +212,18 @@ class CSSMinifierTest extends munit.FunSuite {
                          |  fuga: $u1
                          |}
                          |""".stripMargin)
-    assertEquals(res, s"{hoge: $u0;fuga: $u1}")
+    assertEquals(res, s"{hoge:$u0;fuga:$u1}")
+  }
+  test("compress zeros") {
+    val res =
+      CSSMinifier.run(s"""|
+                         |{
+                         |  margin: 0 0 0 0;
+                         |  padding: 0 0 0;
+                         |  flex: 0 0;
+                         |  margin: 0 0 0 0
+                         |}
+                         |""".stripMargin)
+    assertEquals(res, s"{margin:0;padding:0;flex:0 0;margin:0}")
   }
 }

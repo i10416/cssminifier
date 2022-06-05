@@ -149,7 +149,7 @@ object CSSMinifier extends DataURLPat {
   }
 
   /** remove redundant leading and trailing whitespace-like chars, repeated
-    * semi-colons and empty rules
+    * semi-colons, repeated 0s(like `margin: 0 0 0 0`) and empty rules
     */
   @tailrec
   def handleEmptyLike(
@@ -179,7 +179,7 @@ object CSSMinifier extends DataURLPat {
             ws :: tail,
             Some(
               char @ (';' | '{' | '}' | '\r' | '\n' | '=' | '>' | '!' | '(' |
-              '[' | ',')
+              '[' | ',' | ':')
             )
           ) if ws.isWhitespace =>
         handleEmptyLike(tail, prev, result)
@@ -206,6 +206,25 @@ object CSSMinifier extends DataURLPat {
             handleEmptyLike(tail, Some(head), head :: next)
           case Nil => handleEmptyLike(tail, None, Nil)
         }
+      // 0; or 0; then backtrack to find <not `flex`>:0 0;
+      case ((e @ (';' | '}')) :: tail, Some('0'))
+          if result.startsWith(Seq('0', ' ', '0', ':')) => {
+        if (result.drop(4).startsWith("xelf")) {
+          handleEmptyLike(tail, Some(e), e :: result)
+        } else {
+          handleEmptyLike(tail, Some(e), e :: result.drop(2))
+        }
+      }
+      // 0; or 0; then backtrack to find :0 0 0;
+      case ((e @ (';' | '}')) :: tail, Some('0'))
+          if result.startsWith(Seq('0', ' ', '0', ' ', '0', ':')) => {
+        handleEmptyLike(tail, Some(e), e :: result.drop(4))
+      }
+      // 0; or 0; then backtrack to find :0 0 0 0;
+      case ((e @ (';' | '}')) :: tail, Some('0'))
+          if result.startsWith(Seq('0', ' ', '0', ' ', '0', ' ', '0', ':')) => {
+        handleEmptyLike(tail, Some(e), e :: result.drop(6))
+      }
       case (head :: tail, prev) =>
         handleEmptyLike(tail, Some(head), head :: result)
       case (Nil, _) => result.reverse
@@ -372,9 +391,6 @@ object CSSMinifier extends DataURLPat {
       .foldLeft(s2) { case (acc, (str, idx)) =>
         acc.replace(placeholder("STRING", idx), str)
       }
-      .replaceAll(":0 0 0 0(;|})", ":0$1") // Replace 0 0 0 0; with 0.
-      .replaceAll(":0 0 0(;|})", ":0$1") // Replace 0 0 0; with 0.
-    // .replaceAll("(?<!flex):0 0(;|})", ":0$1")
   }
 
   @tailrec
