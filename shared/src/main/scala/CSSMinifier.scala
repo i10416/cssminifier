@@ -58,11 +58,11 @@ object CSSMinifier extends DataURLPat {
     matchDataURLStart(s) match {
       case Some((Some(quoteLike), startPos)) => {
         val quote = if (quoteLike == "\"") '\"' else '\'' // " or '
-        val startFrom = startPos + 5 // skip `url(<quote>`
+        val startFrom = startPos + 4 // skip `url(<quote>`
         val (leading, trailing) = s.splitAt(startFrom)
         // `leading` contains `url("` at the end of string
         val (url, tail) =
-          readUntilClosingPairOrEOF(trailing.toList, quote) match {
+          readUntilClosingPairOrEOF(trailing.drop(1).toList, quote) match {
             // `remains` start from char after closing char, do NOT contain `"` nor `'`.
             case Some((dataURL, remains)) => (dataURL.trim(), remains.mkString)
             case None =>
@@ -70,8 +70,8 @@ object CSSMinifier extends DataURLPat {
           }
         done.append(leading)
         done.append(placeholder("URL", preservedURLs.length))
-        done.append(quote)
-        preserveURLs(tail, done, url :: preservedURLs)
+//        done.append(quote)
+        preserveURLs(tail, done, ("\"" + url + "\"") :: preservedURLs)
       }
 
       case Some((None, startPos)) => {
@@ -149,7 +149,7 @@ object CSSMinifier extends DataURLPat {
   }
 
   /** remove redundant leading and trailing whitespace-like chars, repeated
-    * semi-colons and empty rules
+    * semi-colons, repeated 0s(like `margin: 0 0 0 0`) and empty rules
     */
   @tailrec
   def handleEmptyLike(
@@ -168,18 +168,47 @@ object CSSMinifier extends DataURLPat {
         handleEmptyLike(tail, prev, result)
       // some characters are not affected after removing leading whitespace
       case (
-            (char @ ('=' | '{' | '(' | ')' | '}' | ';' | ',' | '>' |
-            '[')) :: tail,
+            (char @ ('=' | '{' | '(' | ')' | '}' | ';' | ',' | '>' | '[' |
+            ':')) :: tail,
             Some(ws)
           ) if ws.isWhitespace =>
-        val _ :: remains = result
-        handleEmptyLike(tail, Some(char), char :: remains)
+        if (result.startsWith(" 0 0:")) {
+          val maybeFlex = result.drop(5)
+          if (maybeFlex.startsWith("xelf")) {
+            handleEmptyLike(tail, Some(char), char :: result.drop(1))
+          } else {
+            handleEmptyLike(tail, Some(char), char :: result.drop(3))
+          }
+        } else if (result.startsWith(" 0 0 0:")) {
+          handleEmptyLike(tail, Some(char), char :: result.drop(5))
+        } else if (result.startsWith(" 0 0 0 0:")) {
+          handleEmptyLike(tail, Some(char), char :: result.drop(7))
+        } else if (result.startsWith(" enon:")) {
+          val noneable = result.drop(6)
+          if (noneable.startsWith("redrob")) {
+            handleEmptyLike(tail, Some(char), char :: '0' :: ':' :: noneable)
+          } else if (noneable.startsWith("dnuorgkcab")) {
+            handleEmptyLike(tail, Some(char), char :: '0' :: ':' :: noneable)
+          } else if (noneable.startsWith("pot-redrob")) {
+            handleEmptyLike(tail, Some(char), char :: '0' :: ':' :: noneable)
+          } else if (noneable.startsWith("tfel-redrob")) {
+            handleEmptyLike(tail, Some(char), char :: '0' :: ':' :: noneable)
+          } else if (noneable.startsWith("thgir-redrob")) {
+            handleEmptyLike(tail, Some(char), char :: '0' :: ':' :: noneable)
+          } else if (noneable.startsWith("mottob-redrob")) {
+            handleEmptyLike(tail, Some(char), char :: '0' :: ':' :: noneable)
+          } else {
+            handleEmptyLike(tail, Some(char), char :: result.drop(1))
+          }
+        } else {
+          handleEmptyLike(tail, Some(char), char :: result.drop(1))
+        }
       // remove trailing space after some characters
       case (
             ws :: tail,
             Some(
               char @ (';' | '{' | '}' | '\r' | '\n' | '=' | '>' | '!' | '(' |
-              '[' | ',')
+              '[' | ',' | ':')
             )
           ) if ws.isWhitespace =>
         handleEmptyLike(tail, prev, result)
@@ -206,6 +235,45 @@ object CSSMinifier extends DataURLPat {
             handleEmptyLike(tail, Some(head), head :: next)
           case Nil => handleEmptyLike(tail, None, Nil)
         }
+      // 0; or 0; then backtrack to find <not `flex`>:0 0;
+      case ((e @ (';' | '}')) :: tail, Some('0'))
+          if result.startsWith("0 0:") => {
+        if (result.drop(4).startsWith("xelf")) {
+          handleEmptyLike(tail, Some(e), e :: result)
+        } else {
+          handleEmptyLike(tail, Some(e), e :: result.drop(2))
+        }
+      }
+      // 0; or 0; then backtrack to find :0 0 0;
+      case ((e @ (';' | '}')) :: tail, Some('0'))
+          if result.startsWith("0 0 0:") => {
+        handleEmptyLike(tail, Some(e), e :: result.drop(4))
+      }
+      // 0; or 0; then backtrack to find :0 0 0 0;
+      case ((e @ (';' | '}')) :: tail, Some('0'))
+          if result.startsWith("0 0 0 0:") => {
+        handleEmptyLike(tail, Some(e), e :: result.drop(6))
+      }
+      // handle nones
+      case ((e @ (';' | '}')) :: tail, Some('e'))
+          if result.startsWith("enon:") => {
+        val noneable = result.drop(5)
+        if (noneable.startsWith("redrob")) {
+          handleEmptyLike(tail, Some(e), e :: '0' :: ':' :: noneable)
+        } else if (noneable.startsWith("dnuorgkcab")) {
+          handleEmptyLike(tail, Some(e), e :: '0' :: ':' :: noneable)
+        } else if (noneable.startsWith("pot-redrob")) {
+          handleEmptyLike(tail, Some(e), e :: '0' :: ':' :: noneable)
+        } else if (noneable.startsWith("tfel-redrob")) {
+          handleEmptyLike(tail, Some(e), e :: '0' :: ':' :: noneable)
+        } else if (noneable.startsWith("thgir-redrob")) {
+          handleEmptyLike(tail, Some(e), e :: '0' :: ':' :: noneable)
+        } else if (noneable.startsWith("mottob-redrob")) {
+          handleEmptyLike(tail, Some(e), e :: '0' :: ':' :: noneable)
+        } else {
+          handleEmptyLike(tail, Some(e), e :: result)
+        }
+      }
       case (head :: tail, prev) =>
         handleEmptyLike(tail, Some(head), head :: result)
       case (Nil, _) => result.reverse
@@ -372,9 +440,6 @@ object CSSMinifier extends DataURLPat {
       .foldLeft(s2) { case (acc, (str, idx)) =>
         acc.replace(placeholder("STRING", idx), str)
       }
-      .replaceAll(":0 0 0 0(;|})", ":0$1") // Replace 0 0 0 0; with 0.
-      .replaceAll(":0 0 0(;|})", ":0$1") // Replace 0 0 0; with 0.
-      .replaceAll("(?<!flex):0 0(;|})", ":0$1")
   }
 
   @tailrec
