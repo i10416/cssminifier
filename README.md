@@ -4,12 +4,13 @@
 
 |scala 2.13|scala 3|
 |---|---|
-|[![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/https/s01.oss.sonatype.org/dev.i10416/cssminifier_2.13.svg)](https://s01.oss.sonatype.org/content/repositories/snapshots/dev/i10416/cssminifier_2.13/)<br/>[![Maven Central](https://maven-badges.herokuapp.com/maven-central/dev.i10416/cssminifier_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/dev.i10416/cssminifier_2.13)|[![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/https/s01.oss.sonatype.org/dev.i10416/cssminifier_3.svg)](https://s01.oss.sonatype.org/content/repositories/snapshots/dev/i10416/csscompress_3/)<br/>[![Maven Central](https://maven-badges.herokuapp.com/maven-central/dev.i10416/cssminifier_3/badge.svg)](https://maven-badges.herokuapp.com/maven-central/dev.i10416/cssminifier_3)|
+|[![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/https/s01.oss.sonatype.org/dev.i10416/cssminifier_2.13.svg)](https://s01.oss.sonatype.org/content/repositories/snapshots/dev/i10416/cssminifier_2.13/)<br/>[![Maven Central](https://maven-badges.herokuapp.com/maven-central/dev.i10416/cssminifier_2.13/badge.svg)](https://maven-badges.herokuapp.com/maven-central/dev.i10416/cssminifier_2.13)|[![Sonatype Nexus (Snapshots)](https://img.shields.io/nexus/s/https/s01.oss.sonatype.org/dev.i10416/cssminifier_3.svg)](https://s01.oss.sonatype.org/content/repositories/snapshots/dev/i10416/cssminifier_3/)<br/>[![Maven Central](https://maven-badges.herokuapp.com/maven-central/dev.i10416/cssminifier_3/badge.svg)](https://maven-badges.herokuapp.com/maven-central/dev.i10416/cssminifier_3)|
 
 
 This library is a simple, dependency free css minifier supporting Scala 2.13, 3 on JVM, JS and Native Platform.
 
-Algorithm is written in reference to YUICompressor.
+Algorithm is written in reference to YUI
+or.
 
 Following features are supported.
 
