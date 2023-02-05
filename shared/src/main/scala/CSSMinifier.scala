@@ -128,7 +128,7 @@ object CSSMinifier extends DataURLPat {
   ): (Int, List[Char], List[Char]) = {
     str match {
       case head :: tail if matcher(prev, head) =>
-        val (prev :: other) = consumed
+        val (prev :: other) = consumed: @unchecked
         (
           cursor,
           if (shouldReverseBack) other.reverse else other,
@@ -219,7 +219,7 @@ object CSSMinifier extends DataURLPat {
       // semi-colon before closing brace can be omitted
       // e.g. ;} => }
       case ('}' :: tail, Some(';')) =>
-        val _ :: remains = result
+        val _ :: remains = result: @unchecked
         handleEmptyLike(tail, Some('}'), '}' :: remains)
       // remove new lines
       case (('\r' | '\n') :: tail, Some(_)) =>

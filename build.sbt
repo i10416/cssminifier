@@ -1,9 +1,9 @@
 import sbt._
 import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
-val scala213 = "2.13.8"
+val scala213 = "2.13.10"
 
-val scala3 = "3.2.0"
+val scala3 = "3.2.2"
 lazy val projectName = "cssminifier"
 val githubId = "i10416"
 resolvers += Resolver.sonatypeRepo("snapshots")
