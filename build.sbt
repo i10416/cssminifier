@@ -3,10 +3,10 @@ import sbtcrossproject.CrossPlugin.autoImport.crossProject
 
 val scala213 = "2.13.10"
 
-val scala3 = "3.2.2"
+val scala3 = "3.3.0"
 lazy val projectName = "cssminifier"
 val githubId = "i10416"
-resolvers += Resolver.sonatypeRepo("snapshots")
+resolvers ++= Resolver.sonatypeOssRepos("snapshots")
 // WARN: Make sure build.sbt does not define any of the following settings(https://github.com/sbt/sbt-ci-release)
 
 // todo: add task to create github repository from this
@@ -28,7 +28,14 @@ inThisBuild(
     ),
     sonatypeCredentialHost := "s01.oss.sonatype.org",
     sonatypeRepository := "https://s01.oss.sonatype.org/service/local",
-    scalacOptions ++= Seq("-feature", "-deprecation")
+    scalacOptions ++= Seq(
+      "-feature",
+      "-deprecation",
+      "-unchecked",
+      "-language:higherKinds",
+      "-encoding",
+      "utf-8"
+    )
   )
 )
 
@@ -48,16 +55,16 @@ lazy val lib = crossProject(JSPlatform, JVMPlatform, NativePlatform)
   )
   .jsSettings(
     crossScalaVersions := Seq(scala213, scala3),
-    libraryDependencies += ("org.scalameta" %%% "munit" % "1.0.0-M6") % Test
+    libraryDependencies += ("org.scalameta" %%% "munit" % "1.0.0-M7") % Test
   )
   .jvmSettings(
     crossScalaVersions := Seq(scala213, scala3),
-    libraryDependencies += ("org.scalameta" %%% "munit" % "1.0.0-M6") % Test
+    libraryDependencies += ("org.scalameta" %%% "munit" % "1.0.0-M7") % Test
   )
   .nativeSettings(
     crossScalaVersions := Seq(scala213, scala3),
     libraryDependencies ++=
       Seq(
-        "org.scalameta" %%% "munit" % "1.0.0-M6" % Test
+        "org.scalameta" %%% "munit" % "1.0.0-M7" % Test
       )
   )
